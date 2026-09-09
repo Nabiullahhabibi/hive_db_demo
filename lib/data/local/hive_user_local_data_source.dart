@@ -2,48 +2,56 @@ import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
 import '../../core/storage/hive_boxes.dart';
 import '../../core/storage/hive_service.dart';
-import '../../domain/entities/user.dart';
+import '../models/user_model.dart';
 
 class HiveUserLocalDataSource {
-  late final Box<dynamic> _box;
+  late final Box<UserModel> _box;
 
   Future<void> init() async {
-    _box = await HiveService.openBox(
+    if (Hive.isBoxOpen(HiveBoxes.users)) {
+      _box = Hive.box<UserModel>(
+        HiveBoxes.users,
+      );
+
+      return;
+    }
+
+    _box = await Hive.openBox<UserModel>(
       HiveBoxes.users,
     );
   }
 
-  Future<void> createUser(User user) async {
+  Future<void> createUser(
+      UserModel user,
+      ) async {
     await _box.put(
       user.id,
-      _userToMap(user),
+      user,
     );
   }
 
-  User? getUser(String id) {
-    final data = _box.get(id);
-
-    if (data == null) {
-      return null;
-    }
-
-    return _mapToUser(data);
+  UserModel? getUser(
+      String id,
+      ) {
+    return _box.get(id);
   }
 
-  List<User> getUsers() {
-    return _box.values
-        .map(_mapToUser)
-        .toList();
+  List<UserModel> getUsers() {
+    return _box.values.toList();
   }
 
-  Future<void> updateUser(User user) async {
+  Future<void> updateUser(
+      UserModel user,
+      ) async {
     await _box.put(
       user.id,
-      _userToMap(user),
+      user,
     );
   }
 
-  Future<void> deleteUser(String id) async {
+  Future<void> deleteUser(
+      String id,
+      ) async {
     await _box.delete(id);
   }
 
@@ -55,27 +63,5 @@ class HiveUserLocalDataSource {
     await for (final _ in _box.watch()) {
       yield null;
     }
-  }
-
-  Map<String, dynamic> _userToMap(User user) {
-    return {
-      'id': user.id,
-      'name': user.name,
-      'email': user.email,
-      'age': user.age,
-    };
-  }
-
-  User _mapToUser(dynamic data) {
-    final map = Map<String, dynamic>.from(
-      data as Map,
-    );
-
-    return User(
-      id: map['id'] as String,
-      name: map['name'] as String,
-      email: map['email'] as String,
-      age: map['age'] as int,
-    );
   }
 }

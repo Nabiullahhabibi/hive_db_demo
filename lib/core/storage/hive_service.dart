@@ -7,7 +7,9 @@ class HiveService {
     await Hive.initFlutter();
   }
 
-  static Future<Box<dynamic>> openBox(String name) async {
+  static Future<Box<dynamic>> openBox(
+      String name,
+      ) async {
     if (Hive.isBoxOpen(name)) {
       return Hive.box<dynamic>(name);
     }
@@ -19,7 +21,9 @@ class HiveService {
     return Hive.box<dynamic>(name);
   }
 
-  static Future<void> closeBox(String name) async {
+  static Future<void> closeBox(
+      String name,
+      ) async {
     if (Hive.isBoxOpen(name)) {
       await Hive.box<dynamic>(name).close();
     }
