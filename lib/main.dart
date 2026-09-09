@@ -1,39 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 
-import 'core/storage/hive_service.dart';
+import 'core/storage/hive_boxes.dart';
+import 'data/local/hive_post_local_data_source.dart';
 import 'data/local/hive_user_local_data_source.dart';
+import 'data/models/post_model.dart';
+import 'data/models/user_model.dart';
+import 'data/repositories/post_repository_impl.dart';
 import 'data/repositories/user_repository_impl.dart';
+import 'domain/repositories/post_repository.dart';
 import 'domain/repositories/user_repository.dart';
-import 'presentation/pages/hive_demo_page.dart';
+import 'presentation/pages/users_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await HiveService.init();
+  await Hive.initFlutter();
 
-  final localDataSource =
+  Hive.registerAdapter(
+    UserModelAdapter(),
+  );
+
+  Hive.registerAdapter(
+    PostModelAdapter(),
+  );
+
+  final userLocalDataSource =
   HiveUserLocalDataSource();
 
-  await localDataSource.init();
+  final postLocalDataSource =
+  HivePostLocalDataSource();
 
-  final UserRepository repository =
+  await userLocalDataSource.init();
+
+  await postLocalDataSource.init();
+
+  final UserRepository userRepository =
   UserRepositoryImpl(
-    localDataSource: localDataSource,
+    localDataSource:
+    userLocalDataSource,
+  );
+
+  final PostRepository postRepository =
+  PostRepositoryImpl(
+    localDataSource:
+    postLocalDataSource,
   );
 
   runApp(
     HiveDemoApp(
-      repository: repository,
+      userRepository: userRepository,
+      postRepository: postRepository,
     ),
   );
 }
 
 class HiveDemoApp extends StatelessWidget {
-  final UserRepository repository;
+  final UserRepository userRepository;
+  final PostRepository postRepository;
 
   const HiveDemoApp({
     super.key,
-    required this.repository,
+    required this.userRepository,
+    required this.postRepository,
   });
 
   @override
@@ -42,13 +71,18 @@ class HiveDemoApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Hive Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
+        colorScheme:
+        ColorScheme.fromSeed(
+          seedColor:
+          Colors.deepPurple,
         ),
         useMaterial3: true,
       ),
-      home: HiveDemoPage(
-        repository: repository,
+      home: UsersPage(
+        userRepository:
+        userRepository,
+        postRepository:
+        postRepository,
       ),
     );
   }
